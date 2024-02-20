@@ -20,8 +20,6 @@ export class CustomInputElement extends HTMLTextAreaElement {
             this.#currentElement = this.parser.parseInto(this.innerText);
         }
     }
-
-
 }
 
 customElements.define("custom-input", CustomInputElement, { extends: "textarea"});
@@ -71,6 +69,7 @@ export class MarkdownParser extends ParserBaseInterface {
             identifier: 0,
             element: `h${count}`,
             payload: content.substring(count - 1),
+            embedded: null
         };
     }
 
