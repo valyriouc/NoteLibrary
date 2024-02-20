@@ -50,7 +50,7 @@ export class MarkdownParser extends ParserBaseInterface {
             case "#":
                 return this.#parseHeading(content);
             case "*":
-                break;
+                return this.#parseUnorderedListItem(content.substring(1));
             default:
                 throw new Error("Not supported!");
         }
@@ -74,8 +74,34 @@ export class MarkdownParser extends ParserBaseInterface {
         };
     }
 
-    #analyseBetween(content) {
-
+    #ensureWhitespace(character) {
+        if (character !== " ") {
+            throw new Error("Expected whitespace!")
+        }
     }
+
+    #parseUnorderedListItem(content) {
+        this.#ensureWhitespace(content[0]);
+        return {
+            identifier: 1,
+            element: "li",
+            payload: content.substring(1),
+            embedded: "ul",
+        }
+    }
+
+    #analyseBetween(content) {
+        for (const elem in content) {
+            switch(elem) {
+                case "*":
+
+                    break;
+                default:
+                    
+                    break;
+            }
+        }
+    }
+
 
 }
