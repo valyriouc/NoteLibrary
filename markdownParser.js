@@ -20,6 +20,8 @@ export class CustomInputElement extends HTMLTextAreaElement {
             this.#currentElement = this.parser.parseInto(this.innerText);
         }
     }
+
+
 }
 
 customElements.define("custom-input", CustomInputElement, { extends: "textarea"});
@@ -36,11 +38,40 @@ export class MarkdownParser extends ParserBaseInterface {
     }
 
     parseInto(content) {
-        
+        const main = this.#analyseFront(content);
+        if (main.identifier === 1) {
+            main.payload = this.#analyseBetween(main.payload);
+        }
+        return main;
     }
 
     #analyseFront(content) {
+        switch(content[0]) {
+            case "#":
+                return this.#parseHeading(content);
+            case "*":
+                break;
+            default:
+                throw new Error("Not supported!");
+        }
+    }
 
+    #parseHeading(content) {
+        let count = 0;
+        for (const sign of content) {
+            if (sign === "#") {
+                count += 1;
+                continue;
+            }
+
+            break;
+        }
+
+        return {
+            identifier: 0,
+            element: `h${count}`,
+            payload: content.substring(count - 1),
+        };
     }
 
     #analyseBetween(content) {
