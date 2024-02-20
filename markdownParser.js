@@ -102,6 +102,4 @@ export class MarkdownParser extends ParserBaseInterface {
             }
         }
     }
-
-
 }
