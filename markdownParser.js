@@ -1,104 +1,110 @@
+import { ParserBaseInterface } from "./parserInterface.js";
 
-export class CustomInputElement extends HTMLTextAreaElement {
-    #currentTopLevel = null;
-    #currentElement = null;
-    constructor(parser, cols) {
-        super();
-        this.rows = 1;
-        this.cols = cols;
-        this.parser = parser;
-    }
+function createMarkdownParser() { return new MarkdownParser(); }
 
-    async connectedCallback() {
+export class MarkdownSyntax {
+    static h1 = 1;
+    static h2 = 2;
+    static h3 = 3;
+    static h4 = 4;
 
-        // add event listener 
-        this.addEventListener("keypress", this.#handleKeyPress);
-    }
+    static uli = 5;
+    static oli = 6;
+    static todo = 7;
 
-    #handleKeyPress(event){
-        if (event.key === "Enter") {
-            this.#currentElement = this.parser.parseInto(this.innerText);
-        }
-    }
-}
+    static internalLink = 8;
+    static externalLink = 9;
 
-customElements.define("custom-input", CustomInputElement, { extends: "textarea"});
-
-export class ParserBaseInterface {
-    parseInto(content) {
-        throw new Error("Implement this method in a derived class!");
-    }
+    static line = 10;
 }
 
 export class MarkdownParser extends ParserBaseInterface {
     constructor() {
-        super();
+
     }
 
-    parseInto(content) {
-        const main = this.#analyseFront(content);
-        if (main.identifier === 1) {
-            main.payload = this.#analyseBetween(main.payload);
-        }
-        return main;
-    }
-
-    #analyseFront(content) {
-        switch(content[0]) {
+    analyseStart(start) {
+        switch(start[0]) {
             case "#":
-                return this.#parseHeading(content);
+                // reading a heading
+                const headingSize = this.#countHeadingSize(start);
+                return {
+                    id: headingSize,
+                    element: `h${headingSize}`,
+                    embedded: false
+                }
             case "*":
-                return this.#parseUnorderedListItem(content.substring(1));
+            case "-":
+                if (start.length !== 1) throw new Error("No more characters expected!");
+                return {
+                    id: MarkdownSyntax.uli,
+                    element: "li",
+                    embedded: true
+                }
+            case "1":
+            case "a":
+                return {
+                    id: MarkdownSyntax.oli,
+                    element: "li",
+                    embedded: true
+                }
+            case "[":
+                if (start[1] === "[" && start.length === 2) {
+                    return {
+                        id: MarkdownSyntax.internalLink,
+                        element: "a",
+                        embedded: false
+                    }
+                } else if (start.legnth === 1) {
+                    return {
+                        id: MarkdownSyntax.todo,
+                        element: "li",
+                        embedded: true
+                    }
+                }
+                break;
+            case "!": 
+                // an image 
+                break;
+            case "?": 
+                // an external bookmark 
+                break;
             default:
-                throw new Error("Not supported!");
+                return {
+                    id: MarkdownSyntax.line,
+                    element: "line",
+                    embedded: null
+                }
         }
     }
 
-    #parseHeading(content) {
+    #countHeadingSize(start) {
         let count = 0;
-        for (const sign of content) {
-            if (sign === "#") {
-                count += 1;
-                continue;
+        for (const elem of start) {
+            if (elem !== "#") {
+                throw new Error("Expected heading sign!");
             }
-
-            break;
+            count += 1;
         }
-
-        return {
-            identifier: 0,
-            element: `h${count}`,
-            payload: content.substring(count - 1),
-            embedded: null
-        };
+        return count;
     }
 
-    #ensureWhitespace(character) {
-        if (character !== " ") {
-            throw new Error("Expected whitespace!")
-        }
-    }
+    analyseContent(element, content) {
+        switch(element.id) {
+            case MarkdownSyntax.h1:
+            case MarkdownSyntax.h2:
+            case MarkdownSyntax.h3:
+            case MarkdownSyntax.h4:
+                return content;
+            case MarkdownSyntax.uli:
+            case MarkdownSyntax.oli:
+            case MarkdownSyntax.todo:
 
-    #parseUnorderedListItem(content) {
-        this.#ensureWhitespace(content[0]);
-        return {
-            identifier: 1,
-            element: "li",
-            payload: content.substring(1),
-            embedded: "ul",
+                break;
         }
     }
 
-    #analyseBetween(content) {
-        for (const elem in content) {
-            switch(elem) {
-                case "*":
-
-                    break;
-                default:
-                    
-                    break;
-            }
-        }
+    #analyseNormalText() {
+        
     }
 }
